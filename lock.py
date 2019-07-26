@@ -8,6 +8,7 @@ import time
 # PaSoRi RC-S380
 PASORI_S380_PATH = 'usb:054c:06c3'
 
+a = 0
 
 def sc_from_raw(sc):
     return nfc.tag.tt3.ServiceCode(sc >> 6, sc & 0x3f)
@@ -18,6 +19,7 @@ def on_startup(targets):
 
 
 def on_connect(tag):
+    global a
     print "[*] connected:", tag
     sc1 = sc_from_raw(0x200B)
     bc1 = nfc.tag.tt3.BlockCode(0, service=0)
@@ -26,9 +28,16 @@ def on_connect(tag):
     print "Student ID: " + block_data[1:9].decode("utf-8")
     print "Shizudai ID: " + block_data[24:32].decode("utf-8")
     
-    if int(block_data[1:9])== 70810011:
-        print "open"
-        open()   
+    if int(block_data[1:5])== 7081:
+        if a == 0:
+          print "open"
+          a = 1
+          open()
+          
+        else:
+            print "close"
+            a = 0
+            close()
         
     return True
 
@@ -41,14 +50,34 @@ def open():
 
     servo.start(0.0)
 
-    #servo.ChangeDutyCycle(1.25)
-    #time.sleep(0.5)
+    servo.ChangeDutyCycle(2.5)
+    time.sleep(1.5)
     
-    servo.ChangeDutyCycle(6.0)
-    time.sleep(0.5)
+    #servo.ChangeDutyCycle(12.0)
+    #time.sleep(1.5)
 
     #servo.ChangeDutyCycle(2.5)
-    #time.sleep(0.5)
+    #time.sleep(1.5)
+
+    GPIO.cleanup()
+    
+def close():
+    GPIO.setmode(GPIO.BCM)
+
+    gp_out = 4
+    GPIO.setup(gp_out, GPIO.OUT)
+    servo = GPIO.PWM(gp_out, 50) 
+
+    servo.start(0.0)
+
+    #servo.ChangeDutyCycle(2.5)
+    #time.sleep(1.5)
+    
+    servo.ChangeDutyCycle(12.0)
+    time.sleep(1.5)
+
+    #servo.ChangeDutyCycle(2.5)
+    #time.sleep(1.5)
 
     GPIO.cleanup()
 
